@@ -1,0 +1,207 @@
+<Page x:Class="RDownloaderGUI.DownloadPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:local="clr-namespace:RDownloaderGUI"
+      xmlns:ui="http://schemas.inkore.net/lib/ui/wpf/modern"
+      mc:Ignorable="d"
+      d:DesignHeight="800" d:DesignWidth="600"
+      Title="下载">
+
+    <Page.Resources>
+        <!-- 状态 → 颜色映射 -->
+        <local:TaskStatusColorConverter x:Key="StatusColorConverter" />
+        <local:MathSubtractConverter x:Key="MathSubtractConverter" />
+        <!-- 布尔 → 可见性 -->
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </Page.Resources>
+
+    <Grid Margin="12,0">
+        <!-- 无任务时的占位 -->
+        <Border x:Name="EmptyPlaceholder" Visibility="Visible">
+            <ui:IconAndText
+                Icon="{x:Static ui:SegoeFluentIcons.Download}"
+                Content="暂无下载项"
+                Orientation="Vertical"
+                IconSize="48"
+                FontSize="16"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center">
+            </ui:IconAndText>
+        </Border>
+
+        <ListView x:Name="TaskListView"
+                  Visibility="Collapsed"
+                  SelectionMode="Single"
+                  Background="Transparent"
+                  BorderThickness="0"
+                  HorizontalContentAlignment="Stretch"
+                  ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+            <ListView.ItemTemplate>
+                <DataTemplate DataType="{x:Type local:TaskRecord}">
+                    <Border Margin="0,4" Padding="12,10"
+                            Background="{DynamicResource {x:Static ui:ThemeKeys.CardBackgroundFillColorDefaultBrushKey}}"
+                            CornerRadius="6">
+                        <Border.ContextMenu>
+                            <ContextMenu Loaded="ContextMenu_Loaded">
+                                <MenuItem Header="复制链接" Click="CopyLink_Click" Tag="{Binding TaskId}" />
+                                <MenuItem Header="复制文件名" Click="CopyFileName_Click" Tag="{Binding TaskId}" />
+                                <MenuItem Header="打开下载目录" Click="OpenFolder_Click" Tag="{Binding TaskId}" />
+                                <MenuItem Header="打开文件"
+                                          Click="OpenFile_Click"
+                                          Tag="{Binding TaskId}"
+                                          IsEnabled="{Binding CanOpenFile, Mode=OneWay}" />
+                                <Separator Visibility="{Binding ShowCancel, Converter={StaticResource BoolToVis}, Mode=OneWay}" />
+                                <MenuItem Header="暂停"
+                                          Click="CtxPauseResume_Click"
+                                          Tag="{Binding TaskId}"
+                                          Visibility="{Binding IsPauseMode, Converter={StaticResource BoolToVis}, Mode=OneWay}" />
+                                <MenuItem Header="恢复"
+                                          Click="CtxPauseResume_Click"
+                                          Tag="{Binding TaskId}"
+                                          Visibility="{Binding IsResumeMode, Converter={StaticResource BoolToVis}, Mode=OneWay}" />
+                                <MenuItem Header="取消任务"
+                                          Click="CtxCancel_Click"
+                                          Tag="{Binding TaskId}"
+                                          Visibility="{Binding ShowCancel, Converter={StaticResource BoolToVis}, Mode=OneWay}" />
+                                <Separator />
+                                <MenuItem Header="删除任务" Click="CtxDelete_Click" Tag="{Binding TaskId}" />
+                            </ContextMenu>
+                        </Border.ContextMenu>
+
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Row 0: 文件名 + 状态标签 + 按钮行 -->
+                            <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal"
+                                        Margin="0,0,0,4"
+                                        VerticalAlignment="Center">
+                                <TextBlock Text="{Binding FileName, Mode=OneWay}"
+                                           FontSize="14" FontWeight="SemiBold"
+                                           TextTrimming="CharacterEllipsis"
+                                           MaxWidth="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ListView}, Converter={StaticResource MathSubtractConverter}, ConverterParameter=235}"
+                                           VerticalAlignment="Center" />
+                                <Border CornerRadius="3" Padding="6,2" Margin="8,0,0,0"
+                                        Background="{Binding Status, Converter={StaticResource StatusColorConverter}, Mode=OneWay}">
+                                    <TextBlock Text="{Binding Status, Mode=OneWay}"
+                                               FontSize="11"
+                                               Foreground="White"
+                                               VerticalAlignment="Center" />
+                                </Border>
+                            </StackPanel>
+
+                            <!-- Row 0 Col 1: 按钮行 -->
+                            <StackPanel Grid.Row="0" Grid.Column="1"
+                                        Orientation="Horizontal"
+                                        VerticalAlignment="Center">
+
+                                <!-- 暂停/恢复切换按钮 -->
+                                <Button Width="28" Height="28" Padding="0"
+                                        Click="PauseResume_Click"
+                                        Tag="{Binding TaskId}"
+                                        Visibility="{Binding ShowPauseResume, Converter={StaticResource BoolToVis}, Mode=OneWay}">
+                                    <Grid>
+                                        <ui:FontIcon Glyph="&#xE769;"
+                                                     FontSize="12"
+                                                     ToolTip="暂停"
+                                                     Visibility="{Binding IsPauseMode, Converter={StaticResource BoolToVis}, Mode=OneWay}" />
+                                        <ui:FontIcon Glyph="&#xE768;"
+                                                     FontSize="12"
+                                                     ToolTip="恢复"
+                                                     Visibility="{Binding IsResumeMode, Converter={StaticResource BoolToVis}, Mode=OneWay}" />
+                                    </Grid>
+                                </Button>
+
+                                <!-- 取消按钮 -->
+                                <Button Width="28" Height="28" Padding="0"
+                                        Margin="2,0,0,0"
+                                        ToolTip="取消"
+                                        Click="Cancel_Click"
+                                        Tag="{Binding TaskId}"
+                                        Visibility="{Binding ShowCancel, Converter={StaticResource BoolToVis}, Mode=OneWay}">
+                                    <ui:FontIcon Glyph="&#xE711;" FontSize="12"/>
+                                </Button>
+
+                                <!-- 详情按钮 -->
+                                <Button Width="28" Height="28" Padding="0"
+                                        Margin="2,0,0,0"
+                                        ToolTip="详情"
+                                        Tag="{Binding TaskId}"
+                                        Click="Details_Click">
+                                    <ui:FontIcon Glyph="&#xE946;" FontSize="12"/>
+                                </Button>
+
+                                <!-- 删除按钮 -->
+                                <Button Width="28" Height="28" Padding="0"
+                                        Margin="2,0,0,0"
+                                        ToolTip="删除此任务记录"
+                                        Click="Delete_Click"
+                                        Tag="{Binding TaskId}">
+                                    <ui:FontIcon Glyph="&#xE74D;" FontSize="12"/>
+                                </Button>
+                            </StackPanel>
+
+                            <!-- Row 1: 进度文本 + 速度 -->
+                            <Grid Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                                  Margin="0,2,0,2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- 已下载 / 总大小 -->
+                                <TextBlock Grid.Column="0"
+                                           FontSize="11"
+                                           Foreground="{DynamicResource {x:Static ui:ThemeKeys.TextFillColorSecondaryBrushKey}}"
+                                           VerticalAlignment="Center">
+                                    <Run Text="{Binding DownloadedText, Mode=OneWay}" />
+                                    <Run Text=" / " />
+                                    <Run Text="{Binding TotalSizeText, Mode=OneWay}" />
+                                </TextBlock>
+
+                                <!-- 进度百分比 -->
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding ProgressText, Mode=OneWay}"
+                                           FontSize="11"
+                                           Foreground="{DynamicResource {x:Static ui:ThemeKeys.TextFillColorSecondaryBrushKey}}"
+                                           Margin="8,0,0,0"
+                                           VerticalAlignment="Center" />
+
+                                <!-- 下载速度（仅 Running 且 Speed>0 时显示） -->
+                                <TextBlock Grid.Column="2"
+                                           Text="{Binding SpeedText, Mode=OneWay}"
+                                           FontSize="11"
+                                           Foreground="{DynamicResource {x:Static ui:ThemeKeys.AccentTextFillColorPrimaryBrushKey}}"
+                                           Margin="8,0,0,0"
+                                           Visibility="{Binding ShowSpeed, Converter={StaticResource BoolToVis}, Mode=OneWay}"
+                                           VerticalAlignment="Center" />
+                            </Grid>
+
+                            <!-- Row 2: 多状态进度条 -->
+                            <ui:ProgressBar x:Name="ProgressBar1"
+                                            Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+                                            Height="4"
+                                            Minimum="0" Maximum="1"
+                                            Value="{Binding Progress, Mode=OneWay}"
+                                            IsIndeterminate="{Binding IsIndeterminate, Mode=OneWay}"
+                                            ShowPaused="{Binding ShowPaused, Mode=OneWay}"
+                                            ShowError="{Binding ShowError, Mode=OneWay}"
+                                            Margin="0,2,0,0" />
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+    </Grid>
+</Page>

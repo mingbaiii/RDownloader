@@ -1,0 +1,105 @@
+<Page x:Class="RDownloaderGUI.SelectEndpointPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:local="clr-namespace:RDownloaderGUI"
+      xmlns:ui="http://schemas.inkore.net/lib/ui/wpf/modern"
+      mc:Ignorable="d"
+      d:DesignHeight="800" d:DesignWidth="600"
+      Title="选择节点">
+
+    <Page.Resources>
+        <Style x:Key="PageHeaderTextBlockStyle"
+               TargetType="TextBlock">
+            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+            <Setter Property="Foreground"
+                    Value="{DynamicResource {x:Static ui:ThemeKeys.TextFillColorPrimaryBrushKey}}"/>
+        </Style>
+
+        <Style x:Key="PageDescriptionStyle"
+               TargetType="TextBlock">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground"
+                    Value="{DynamicResource {x:Static ui:ThemeKeys.TextFillColorSecondaryBrushKey}}"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="Margin" Value="0,0,0,20"/>
+        </Style>
+    </Page.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- 可滚动内容 -->
+        <ScrollViewer Grid.Row="0"
+                      Padding="20,16">
+            <StackPanel MaxWidth="800"
+                        HorizontalAlignment="Stretch">
+
+                <!-- 页面标题 -->
+                <TextBlock Style="{StaticResource PageHeaderTextBlockStyle}"
+                           Text="选择节点"/>
+                <TextBlock Style="{StaticResource PageDescriptionStyle}">
+                    以下每个文件独立显示其探测到的下载节点。展开文件可启用或禁用对应的端点。
+                    已禁用的节点将不会参与后续下载。
+                </TextBlock>
+
+                <!-- 按文件分组的端点列表（代码动态构建 SettingsExpander） -->
+                <StackPanel x:Name="EndpointStackPanel" Orientation="Vertical"/>
+
+                <!-- 空状态 -->
+                <Border x:Name="EmptyState">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ElementName=EndpointStackPanel, Path=HasItems}" Value="False">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <ui:IconAndText
+                        Icon="{x:Static ui:SegoeFluentIcons.Globe}"
+                        Orientation="Vertical"
+                        IconSize="48"
+                        FontSize="16"
+                        Margin="0,40,0,0">
+                        <ui:IconAndText.Content>
+                            <StackPanel>
+                                <TextBlock Text="暂无端点信息" TextAlignment="Center"/>
+                                <TextBlock Text="请先完成链接解析。"
+                                           TextAlignment="Center"
+                                           Foreground="{DynamicResource {x:Static ui:ThemeKeys.TextFillColorSecondaryBrushKey}}"
+                                           Margin="0,4,0,0"/>
+                            </StackPanel>
+                        </ui:IconAndText.Content>
+                    </ui:IconAndText>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- 底部按钮 -->
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Margin="20,8,20,16">
+            <Button x:Name="BackButton"
+                    Content="返回"
+                    Width="80" Height="32"
+                    Margin="0,0,8,0"
+                    Click="BackButton_Click"/>
+            <Button x:Name="ConfirmButton"
+                    Content="确认"
+                    Width="80" Height="32"
+                    Style="{DynamicResource {x:Static ui:ThemeKeys.AccentButtonStyleKey}}"
+                    Click="ConfirmButton_Click"/>
+        </StackPanel>
+    </Grid>
+</Page>

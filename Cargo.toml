@@ -1,0 +1,32 @@
+[package]
+name = "rdownloader"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+name = "rdown"
+path = "src/main.rs"
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+async-trait = "0.1"
+reqwest = { version = "0.12", features = ["rustls-tls", "stream"] }
+futures-util = "0.3"
+thiserror = "2"
+base64 = "0.22"
+rand = "0.8"
+surge-ping = "0.8"
+url = "2"
+chrono = "0.4"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+rustyline = "14"
+ctrlc = "3"
+crossterm = { version = "0.28", features = ["event-stream"] }
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+strip = true
+panic = "abort"
